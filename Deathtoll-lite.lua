@@ -24,10 +24,9 @@
 
 _addon.author   = 'Sjshovan (Apogee)';
 _addon.name     = 'Deathtoll-Lite';
-_addon.version  = '1.0.0';
+_addon.version  = '1.1.0';
 
 require 'common'
-require 'os'
 
 ---------------------------------------------------------------------------------------------------
 -- desc: Default Deathtoll configuration table.
@@ -105,14 +104,6 @@ local function getMax(...)
         end
     end
     return max;
-end
-
-local function getWords(message)
-    local words = {};
-    for word in message:gmatch("%S+") do
-        table.insert(words, word);
-    end
-    return words;
 end
 
 local function has_value(tab, val)
@@ -281,26 +272,16 @@ local function getPlayerName()
     return _party:GetPartyMemberName(0);
 end
 
-local function parseEnemyName(message)
-    local words = getWords(message);
-    local enemy_name = table.concat(words, " ", #words, #words):gsub("%.", "");
-
-    return enemy_name;
+local function parseEnemyName(match)
+    local pattern = "^%w+ defeats the (.+)";
+    local enemy_name = string.match(match, pattern);
+    return enemy_name:gsub("%.", "");
 end
 
-local function pasePartyMemberName(message)
-    local excludes = {"defeats", "the", parseEnemyName(message)}
-    local words = getWords(message);
-
-    for index, word in ipairs(words) do
-        if has_value(excludes, word) then
-            words[index] = nil;
-        end
-    end
-
-    local member_name = table.concat(words, " ", 2, #words);
-
-    return member_name;
+local function pasePartyMemberName(match)
+    local pattern = "^(%w+) defeats the .+";
+    local member_name = string.match(match, pattern);
+    return member_name:gsub("%.", "");
 end
 
 local function displayHelp()
@@ -446,38 +427,49 @@ ashita.register_event('newchat', function(mode, chat)
     if mode == chatModes.combatInfo or mode == chatModes.combatInfo2 then
 
         local timestamp = os.date('%Y-%m-%d %H:%M:%S');
+        local suicide = string.match(chat, "The (.+) falls to the ground.");
 
-        if getSolo() then
-            local pattern = getPlayerName().." defeats the .*";
-            local match = string.match(chat, pattern);
+        if (not suicide) then
 
-            if  match then
-                local enemy = parseEnemyName(match);
+            if getSolo() then
+                local pattern = "("..getPlayerName().." defeats the .+).";
+                local match = string.match(chat, pattern);
 
-                adjustToll(1, 1, false);
-                setLastKilled(enemy, timestamp, getPlayerName());
-                storeToll(true);
-                displayToll();
-            end
-
-        else
-            local pattern = ".* defeats the .*";
-            local match = string.match(chat, pattern);
-
-            if match then
-                local killer = pasePartyMemberName(match);
-                local members = getPartyMembers();
-
-                if has_value(members, killer) then
+                if  match then
                     local enemy = parseEnemyName(match);
 
                     adjustToll(1, 1, false);
-                    setLastKilled(enemy, timestamp, killer);
+                    setLastKilled(enemy, timestamp, getPlayerName());
                     storeToll(true);
                     displayToll();
                 end
+
+            else
+                local pattern = "(%w+ defeats the .+).";
+                local match = string.match(chat, pattern);
+
+                if match then
+                    local killer = pasePartyMemberName(match);
+                    local members = getPartyMembers();
+
+                    if has_value(members, killer) then
+                        local enemy = parseEnemyName(match);
+
+                        adjustToll(1, 1, false);
+                        setLastKilled(enemy, timestamp, killer);
+                        storeToll(true);
+                        displayToll();
+                    end
+                end
             end
+
+        else
+            adjustToll(1, 1, false);
+            setLastKilled(suicide, timestamp, "Suicide");
+            storeToll(true);
+            displayToll();
         end
+
     end
     return chat;
 end );
