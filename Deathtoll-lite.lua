@@ -24,7 +24,7 @@
 
 _addon.author   = 'Sjshovan (Apogee)';
 _addon.name     = 'Deathtoll-Lite';
-_addon.version  = '1.1.0';
+_addon.version  = '1.1.1';
 
 require 'common'
 
@@ -134,7 +134,8 @@ local function echo(message)
 end
 
 local function message(mode, message)
-    _chat:AddChatMessage(mode, message)
+    local c_msg = string.color(message, mode)
+    _chat:AddChatMessage(chatModes.say, c_msg);
 end
 
 -----------------------------------------------------
