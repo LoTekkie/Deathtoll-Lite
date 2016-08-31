@@ -24,7 +24,7 @@
 
 _addon.author   = 'Sjshovan (Apogee)';
 _addon.name     = 'Deathtoll-Lite';
-_addon.version  = '1.1.1';
+_addon.version  = '1.1.2';
 
 require 'common'
 
@@ -67,10 +67,10 @@ local helpCmds = {
     "======================",
     "Deathtoll-Lite Commands",
     "======================",
-    "/dtl get => Display the current deathtoll.",
-    "/dtl set x => Set the current deathtoll to x.",
-    "/dtl add x => Add x to the current deathtoll.",
-    "/dtl sub x => Subtract x from the current deathtoll.",
+    "/dtl get => Display the current death toll.",
+    "/dtl set x => Set the current death toll to x.",
+    "/dtl add x => Add x to the current death toll.",
+    "/dtl sub x => Subtract x from the current death toll.",
     "/dtl last => Display the last enemy killed.",
     "/dtl solo (on/off) => Switch counting kills made by party members.",
     "/dtl reload => Reload the Deathtoll-Lite addon.",
@@ -156,7 +156,7 @@ end
 local function setToll(int)
     local new_deathtoll = filterToll(tonumber(int));
     deathtoll_config.deathtoll = new_deathtoll;
-    message(chatModes.party, "The deathtoll has been set to "..new_deathtoll..".");
+    message(chatModes.party, "The death toll has been set to "..new_deathtoll..".");
 end
 
 local function storeToll(silent)
@@ -164,7 +164,7 @@ local function storeToll(silent)
     if (silent) then
         return true;
     end
-    message(chatModes.linkshell, "Deathtoll stored.");
+    message(chatModes.linkshell, "Death toll stored.");
 end
 
 local function getToll()
@@ -199,11 +199,11 @@ local function adjustToll(int, direction, silent)
         dir_msg = "decreased";
     end
 
-    message(chatModes.party, "The deathtoll has been "..dir_msg.." by "..adj_ammount..".");
+    message(chatModes.party, "The death toll has been "..dir_msg.." by "..adj_ammount..".");
 end
 
 local function displayToll()
-    message(chatModes.say, "The current deathtoll is "..getToll()..".");
+    message(chatModes.say, "The current death toll is "..getToll()..".");
 end
 
 -----------------------------------------------------
@@ -257,9 +257,9 @@ end
 local function displaySoloStatus()
     local solo_msg = "";
     if getSolo() then
-        solo_msg = "".."[".."Enabled".."]: ".."Party member kills will not be added to the deathtoll."
+        solo_msg = "".."[".."Enabled".."]: ".."Party member kills will not be added to the death toll."
     else
-        solo_msg = "".."[".."Disabled".."]: ".."Party member kills will be added to the deathtoll."
+        solo_msg = "".."[".."Disabled".."]: ".."Party member kills will be added to the death toll."
     end
 
     message(chatModes.say, solo_msg);
