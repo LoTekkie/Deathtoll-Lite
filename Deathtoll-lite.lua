@@ -24,7 +24,7 @@
 
 _addon.author   = 'Sjshovan (Apogee)';
 _addon.name     = 'Deathtoll-Lite';
-_addon.version  = '1.1.2';
+_addon.version  = '1.1.3';
 
 require 'common'
 
@@ -106,6 +106,14 @@ local function getMax(...)
     return max;
 end
 
+local function getWords(message)
+    local words = {};
+    for word in message:gmatch("%S+") do
+        table.insert(words, word);
+    end
+    return words;
+end
+
 local function has_value(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
@@ -134,8 +142,12 @@ local function echo(message)
 end
 
 local function message(mode, message)
-    local c_msg = string.color(message, mode)
-    _chat:AddChatMessage(chatModes.say, c_msg);
+	local c_msg = "";
+        for i, word in ipairs(getWords(message)) do
+            local c_word = string.color(word, mode)
+            c_msg = c_msg..word.." ";
+        end
+    _chat:AddChatMessage(mode, c_msg)
 end
 
 -----------------------------------------------------
