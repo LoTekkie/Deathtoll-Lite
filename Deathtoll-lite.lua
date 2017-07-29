@@ -24,7 +24,7 @@
 
 _addon.author   = 'Sjshovan (Apogee)';
 _addon.name     = 'Deathtoll-Lite';
-_addon.version  = '1.1.3';
+_addon.version  = '1.9.0';
 
 require 'common'
 
@@ -43,13 +43,26 @@ local default_config =
 ---------------------------------------------------------------------------------------------------
 local deathtoll_config = default_config;
 
-local _core =  AshitaCore;
+local _core = AshitaCore;
 
 local _resource = _core:GetResourceManager();
 local _chat =  _core:GetChatManager();
+local _font = _core:GetFontManager();
 local _data =  _core:GetDataManager();
 local _party = _data:GetParty();
 local _player = _data:GetPlayer();
+
+local chatColors = {
+    say         = 'cf7f7fa',
+    shout       = 'cd38651',
+    tell        = 'cFF0000FF', --'ce2bbe7',
+    party       = 'c56ffff',
+    linkshell   = 'c60c296',
+    echo        = 'cffff58',
+    unity       = 'ceeee3b',
+    combatInfo  = 'c15f435',
+    combatInfo2 = 'cf3f355'
+}
 
 local chatModes = {
     say         = 1,
@@ -106,14 +119,6 @@ local function getMax(...)
     return max;
 end
 
-local function getWords(message)
-    local words = {};
-    for word in message:gmatch("%S+") do
-        table.insert(words, word);
-    end
-    return words;
-end
-
 local function has_value(tab, val)
     for index, value in ipairs(tab) do
         if value == val then
@@ -141,13 +146,8 @@ local function echo(message)
     _chat:QueueCommand("/echo "..message, 0);
 end
 
-local function message(mode, message)
-	local c_msg = "";
-        for i, word in ipairs(getWords(message)) do
-            local c_word = string.color(word, mode)
-            c_msg = c_msg..word.." ";
-        end
-    _chat:AddChatMessage(mode, c_msg)
+local function message(mode, text)
+    _chat:AddChatMessage(mode, text);
 end
 
 -----------------------------------------------------
@@ -172,7 +172,7 @@ local function setToll(int)
 end
 
 local function storeToll(silent)
-    settings:save(_addon.path .. 'settings/deathtoll.json', deathtoll_config);
+    ashita.settings.save(_addon.path .. 'settings/deathtoll.json', deathtoll_config);
     if (silent) then
         return true;
     end
@@ -282,7 +282,7 @@ end
 -----------------------------------------------------
 
 local function getPlayerName()
-    return _party:GetPartyMemberName(0);
+    return _party:GetMemberName(0);
 end
 
 local function parseEnemyName(match)
@@ -316,7 +316,7 @@ end
 local function getPartyMembers()
     local members = {};
     for i=0, 6, 1 do
-        local member = _party:GetPartyMemberName(i);
+        local member = _party:GetMemberName(i);
         if member then
             member = string.gsub(member, "%s+", "")
             table.insert(members, member);
@@ -331,8 +331,7 @@ end
 -- desc: First called when our addon is loaded.
 ---------------------------------------------------------------------------------------------------
 ashita.register_event('load', function()
-    deathtoll_config = settings:load(_addon.path .. 'settings/deathtoll.json') or default_config;
-    deathtoll_config = table.merge(default_config, deathtoll_config);
+    deathtoll_config = ashita.settings.load_merged(_addon.path .. 'settings/settings.json', deathtoll_config);
 end );
 
 ---------------------------------------------------------------------------------------------------
@@ -349,7 +348,7 @@ end );
 -- desc: Called when our addon receives a command.
 ---------------------------------------------------------------------------------------------------
 ashita.register_event('command', function(cmd, nType)
-    local args = cmd:GetArgs();
+    local args = cmd:args();
 
     if (args[1] ~= '/dtl' and args[1] ~= '/dtlite' and args[1] ~= '/deathtolllite') then
         return false;
@@ -435,10 +434,9 @@ end );
 -- func: newchat
 -- desc: Called when our addon receives a chat line.
 ---------------------------------------------------------------------------------------------------
-ashita.register_event('newchat', function(mode, chat)
+ashita.register_event('incoming_text', function(mode, chat, modifiedmode, modifiedmessage, blocked)
 
     if mode == chatModes.combatInfo or mode == chatModes.combatInfo2 then
-
         local timestamp = os.date('%Y-%m-%d %H:%M:%S');
         local suicide = string.match(chat, "The (.+) falls to the ground.");
 
@@ -484,5 +482,5 @@ ashita.register_event('newchat', function(mode, chat)
         end
 
     end
-    return chat;
+    return false;
 end );
